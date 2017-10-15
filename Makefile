@@ -41,8 +41,10 @@ test_%: test_%.o $(OBJS_LIB)
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF .$@.d $<
 
+plot: output.txt
+	gnuplot scripts/runtime.gp
+
 clean:
 	$(RM) $(TESTS) $(OBJS)
 	$(RM) $(deps)
-
 -include $(deps)

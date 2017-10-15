@@ -33,19 +33,24 @@ static void rmcrlf(char *s)
 }
 
 #define IN_FILE "cities.txt"
+#define SHUF "cities1.txt"
+#define SORT "cities2.txt"
+
 
 int main(int argc, char **argv)
 {
     char word[WRDMAX] = "";
     char *sgl[LMAX] = {NULL};
-    tst_node *root = NULL, *res = NULL;
-    int rtn = 0, idx = 0, sidx = 0;
+    tst_node *root = NULL, *res = NULL, *root_1 = NULL, *root_2 = NULL;
+    int rtn = 0, idx = 0, sidx = 0, tmp = 0;
     FILE *fp = fopen(IN_FILE, "r");
+    FILE *output = fopen("output.txt", "w");
     double t1, t2;
 
+    //origin
     if (!fp) { /* prompt, open, validate file for reading */
         fprintf(stderr, "error: file open failed '%s'.\n", argv[1]);
-        return 1;
+        exit(0);
     }
 
     t1 = tvgetf();
@@ -55,7 +60,7 @@ int main(int argc, char **argv)
         if (!tst_ins_del(&root, &p, INS, CPY)) {
             fprintf(stderr, "error: memory exhausted, tst_insert.\n");
             fclose(fp);
-            return 1;
+            exit(0);
         }
         idx++;
     }
@@ -63,6 +68,58 @@ int main(int argc, char **argv)
 
     fclose(fp);
     printf("ternary_tree, loaded %d words in %.6f sec\n", idx, t2 - t1);
+    fprintf(output,"origin %lf\n",t2 - t1);
+
+    //SHUF
+    fp = fopen(SHUF, "r");
+    if (!fp) { /* prompt, open, validate file for reading */
+        fprintf(stderr, "error: file open failed '%s'.\n", argv[1]);
+        exit(0);
+    }
+
+    t1 = tvgetf();
+    while ((rtn = fscanf(fp, "%s", word)) != EOF) {
+        char *p = word;
+        /* FIXME: insert reference to each string */
+        if (!tst_ins_del(&root_1, &p, INS, CPY)) {
+            fprintf(stderr, "error: memory exhausted, tst_insert.\n");
+            fclose(fp);
+            exit(0);
+        }
+        tmp++;
+    }
+    t2 = tvgetf();
+
+    fclose(fp);
+    printf("ternary_tree1, loaded %d words in %.6f sec\n", idx, t2 - t1);
+    fprintf(output,"shuffle %lf\n",t2 - t1);
+    tmp = 0;
+
+    //SORT
+    fp = fopen(SORT, "r");
+    if (!fp) { /* prompt, open, validate file for reading */
+        fprintf(stderr, "error: file open failed '%s'.\n", argv[1]);
+        exit(0);
+    }
+
+    t1 = tvgetf();
+    while ((rtn = fscanf(fp, "%s", word)) != EOF) {
+        char *p = word;
+        /* FIXME: insert reference to each string */
+        if (!tst_ins_del(&root_2, &p, INS, CPY)) {
+            fprintf(stderr, "error: memory exhausted, tst_insert.\n");
+            fclose(fp);
+            exit(0);
+        }
+        tmp++;
+    }
+    t2 = tvgetf();
+
+    fclose(fp);
+    printf("ternary_tree2, loaded %d words in %.6f sec\n", idx, t2 - t1);
+    fprintf(output,"sort %lf\n",t2 - t1);
+
+    fclose(output);
 
     for (;;) {
         printf(
@@ -150,6 +207,8 @@ int main(int argc, char **argv)
             break;
         case 'q':
             tst_free_all(root);
+            tst_free_all(root_1);
+            tst_free_all(root_2);
             return 0;
             break;
         default:
