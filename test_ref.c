@@ -6,7 +6,7 @@
 #include "tst.h"
 
 /** constants insert, delete, max word(s) & stack nodes */
-enum { INS, DEL, WRDMAX = 256, STKMAX = 512, LMAX = 1024 };
+enum { INS, DEL, WRDMAX = 32, STKMAX = 512, LMAX = 1024 ,MAXNODE = 100000};
 #define REF INS
 #define CPY DEL
 
@@ -38,6 +38,8 @@ int main(int argc, char **argv)
 {
     char word[WRDMAX] = "";
     char *sgl[LMAX] = {NULL};
+    char *Arr = malloc(sizeof(char) * WRDMAX * MAXNODE);
+    char *pHead = Arr;
     tst_node *root = NULL, *res = NULL;
     int rtn = 0, idx = 0, sidx = 0;
     FILE *fp = fopen(IN_FILE, "r");
@@ -50,13 +52,14 @@ int main(int argc, char **argv)
 
     t1 = tvgetf();
     while ((rtn = fscanf(fp, "%s", word)) != EOF) {
-        char *p = word;
-        /* FIXME: insert reference to each string */
-        if (!tst_ins_del(&root, &p, INS, CPY)) {
+        strcpy(pHead,word);
+        char *p = pHead;
+        if (!tst_ins_del(&root, &p, INS, REF)) {
             fprintf(stderr, "error: memory exhausted, tst_insert.\n");
             fclose(fp);
             return 1;
         }
+        pHead+= strlen(word)+1;
         idx++;
     }
     t2 = tvgetf();
@@ -84,12 +87,13 @@ int main(int argc, char **argv)
                 break;
             }
             rmcrlf(word);
-            p = word;
+            strcpy(pHead,word);
+            p = pHead;
             t1 = tvgetf();
-            /* FIXME: insert reference to each string */
-            res = tst_ins_del(&root, &p, INS, CPY);
+            res = tst_ins_del(&root, &p, INS, REF);
             t2 = tvgetf();
             if (res) {
+                pHead+= strlen(word)+1;
                 idx++;
                 printf("  %s - inserted in %.6f sec. (%d words in tree)\n",
                        (char *) res, t2 - t1, idx);
@@ -138,8 +142,7 @@ int main(int argc, char **argv)
             p = word;
             printf("  deleting %s\n", word);
             t1 = tvgetf();
-            /* FIXME: remove reference to each string */
-            res = tst_ins_del(&root, &p, DEL, CPY);
+            res = tst_ins_del(&root, &p, DEL, REF);
             t2 = tvgetf();
             if (res)
                 printf("  delete failed.\n");
@@ -150,6 +153,7 @@ int main(int argc, char **argv)
             break;
         case 'q':
             tst_free_all(root);
+            free(Arr);
             return 0;
             break;
         default:
